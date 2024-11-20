@@ -34,6 +34,7 @@ interface CartItem {
 type ShoppingProps = NavigationProp & RouteProp;
 
 export default function Shopping({ navigation, route }: ShoppingProps): React.JSX.Element {
+    const orderId = route.params?.orderId; 
     const [orderMenu, setOrderMenu] = useState<CartItem[]>([]);
     const [storeTitle, setStoreTitle] = useState<string>('');
 
@@ -64,6 +65,22 @@ export default function Shopping({ navigation, route }: ShoppingProps): React.JS
             fetchCartItems();
         }
     }, []);
+
+    useEffect(() => {
+        const getFetchMenu = async () => {
+            if (orderMenu.length > 0 && orderMenu[0].store_id) {
+                try {
+                    const token = await getToken();
+                    const response = await axios.get(`${BASE_URL}/stores/id/${orderMenu[0].store_id}?token=${token}`);
+                    setStoreTitle(response.data.store_data.store_name);
+                    console.log(response.data);
+                } catch (error) {
+                    console.error("Error fetching menu info:", error);
+                }
+            }
+        };
+        getFetchMenu();
+    }, [orderMenu]); 
 
     const fetchOrderDetails = async (order_id: number) => {
         console.log(order_id);
@@ -129,7 +146,7 @@ export default function Shopping({ navigation, route }: ShoppingProps): React.JS
     };
 
     const handlePayPage = () => {
-        navigation.navigate('Pay');
+        navigation.navigate('Pay', { orderId });
     };
 
     const handleBack = () => {
